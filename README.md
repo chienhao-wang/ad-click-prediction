@@ -1,5 +1,6 @@
 # Ad Click Prediction with Cloud-Integrated Pipeline ☁️
 
+![Status](https://img.shields.io/badge/Status-Project_Completed-success)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![Google Cloud](https://img.shields.io/badge/Google_BigQuery-Data_Warehouse-orange)
 
@@ -9,7 +10,10 @@
 - [Executive Summary](#1-executive-summary)
 - [Infrastructure & Tech Stack](#2-infrastructure--tech-stack)
 - [Data Intelligence & Strategy](#3-data-intelligence--strategy)
-- [Modelling Methodology](#4-modelling-methodology-in-progress)
+- [Modelling Methodology](#4-modelling-methodology--selection)
+- [Model Results & Business Evaluation]()
+- [Explainable AI: The "Why" Behind Clicks]()
+- [Recommendations]()
 
 ---
 
@@ -17,8 +21,14 @@
 **Business Objective:**
 In the competitive landscape of digital advertising, minimising wasted ad spend is paramount. This project aims to construct a machine learning pipeline capable of predicting user **Click-Through Rates (CTR)**. By identifying high-propensity user segments, the model enables more efficient budget allocation and targeted marketing strategies.
 
-**Technical Strategy:**
-Unlike standard static analysis, this project simulates a scalable **Modern Data Stack** workflow. Raw data is ingested into a cloud data warehouse (**Google BigQuery**), processed via a Python-based ETL pipeline, and modelled using advanced gradient boosting techniques.
+**The Solution:**
+I engineered an end-to-end Modern Data Stack simulation:
+1.  **Cloud ETL:** Ingested raw data via **Google BigQuery** data warehouse.
+2.  **Data Strategy:** Implemented a "Missingness as Signal" strategy to handle 47% missing demographic data without information loss.
+3.  **Rigorous Modelling:** Conducted a champion-challenger benchmark, selecting **XGBoost** over Logistic Regression for its superior ability to capture non-linear user behaviours.
+
+**Key Result:**
+The final model achieves an **ROC-AUC of 0.71**. Implementing this model to target the top 20% of users yields a **1.3x Lift** in click capture rate compared to random targeting, representing a potential **30% efficiency gain** in ad spend.
 
 ---
 
@@ -92,14 +102,65 @@ A "Missingness Bias Analysis" was conducted to determine if data was *Missing No
 
 ---
 
-## 4. Modelling Methodology (In Progress)
-The predictive modelling phase focuses on maximizing the **F1-Score** to balance precision and recall, ensuring we capture potential clickers without overspending on false positives.
+## 4. Modelling Methodology & Selection
 
-* **Algorithm Selection:**
-    * **Logistic Regression:** Established as a baseline for interpretability.
-    * **XGBoost Classifier:** Selected for its superior performance on tabular data and ability to handle non-linear relationships.
-* **Evaluation Metrics:** Accuracy, Precision, Recall, ROC-AUC.
-* **Model Interpretability:** Utilising SHAP values to explain *why* the model predicts a specific user will click, providing actionable insights for marketing teams.
+### A. Model Benchmarking (Champion vs. Challenger)
+Before finalising the architecture, I conducted a rigorous benchmark comparison to select the optimal algorithm.
 
-*[Model Performance Metrics and Confusion Matrix to be added upon training completion]*
+| Model | ROC-AUC | Outcome |
+| :--- | :--- | :--- |
+| **Logistic Regression** | 0.652 | Underfitting (Baseline) |
+| **Random Forest** | 0.698 | Challenger |
+| **XGBoost** | **0.710** | **Champion 🏆** |
 
+**Decision:**
+**XGBoost** was selected as the production model as it demonstrated the highest discriminative power and proved significantly more robust (+6% AUC lift) compared to the linear baseline, effectively capturing the non-linear interactions between content categories and time.
+
+![Model Benchmark](charts/model_benchmark.png)
+
+---
+
+## 5. Model Results & Business Evaluation 📈
+
+### Performance Metrics
+* **ROC-AUC Score:** **0.71** (Demonstrating moderate discriminative power, safely above the random baseline).
+* **Precision / Recall:** The model prioritises Recall (98% for Class 1) to ensure potential leads are not missed.
+
+### Commercial Impact: Lift Analysis
+* **The "So What?":** By targeting the top **20%** of users based on model probability, we capture **26%** of all clicks.
+* **Efficiency Gain:** This represents a **1.3x Lift** compared to random targeting.
+
+![Cumulative Gain Chart](charts/gain_chart.png)    
+*(Caption: Cumulative Gain Chart showing a 1.3x lift in the top 20% percentile)*
+
+### Confusion Matrix
+![Confusion Matrix](charts/confusion_matrix.png)
+
+---
+
+## 6. Explainable AI: The "Why" Behind Clicks 🧠
+Using **SHAP**, I deconstructed the model's decision-making process to provide actionable insights for the marketing team.
+
+![SHAP Summary Plot](charts/shap_summary.png)
+
+**Key Drivers Identified:**
+- **Age is the strongest overall predictor**, with higher age groups generally showing a positive impact on click likelihood. This indicates meaningful behavioural variation across demographic segments.
+
+- **Bottom ad placements demonstrate a clear positive effect**, shown by the cluster of high-value (red) SHAP points on the right. Users appear more inclined to engage with ads positioned after scrolling through content.
+
+- **Afternoon impressions contribute positively to click behaviour**, with red points consistently appearing on the positive SHAP axis. This highlights the afternoon as an effective time window for performance-focused campaigns.
+
+- **Entertainment and Social Media browsing behaviours act as positive drivers**, suggesting that users consuming lighter or exploratory content are more receptive to advertising.
+
+- **Mobile devices show a slight positive shift**, aligning with typical patterns of higher engagement among mobile-first users.
+
+- **Top placements and morning traffic exhibit negative impacts**, indicating reduced engagement during early hours and potential banner blindness for highly prominent ad locations.
+
+---
+
+## 7. Recommendations
+1.  **Budget Reallocation:** Shift ad spend from News portals to **Entertainment & Social Media** channels to capitalise on the high-intent user mindset.
+2.  **Dayparting Strategy:** Increase bid caps during **Afternoon** slots and reduce spend at Night.
+3.  **Data Collection:** Investigate the User Experience (UX) friction points causing high demographic data missingness (47%), as richer data could further improve model precision.
+
+---
